@@ -36,11 +36,10 @@
     "README.zh.md"
   ],
   "scripts": {
-    "test": "node --test",
-    "basic-example": "node examples/basic.mjs",
     "async-example": "node examples/async.mjs",
-    "flame-example": "node examples/flame.mjs",
+    "basic-example": "node examples/basic.mjs",
     "check:npm:login": "node scripts/check-npm-login.mjs",
+    "flame-example": "node examples/flame.mjs",
     "format": "prettier --write \"src/**/*.{js,mjs}\"",
     "lint": "eslint src --ext .js,.mjs src",
     "lint:fix": "eslint src --ext .js,.mjs --fix",
@@ -54,7 +53,9 @@
     "release:major": "yarn lint && standard-version --release-as major",
     "release:minor": "yarn lint && standard-version --release-as minor",
     "release:patch": "yarn lint && standard-version --release-as patch",
-    "sort": "sort-package-json"
+    "report": "wukong-profiler report ./profile.json -o my-report.html --open",
+    "sort": "sort-package-json",
+    "test": "node --test"
   },
   "husky": {
     "hooks": {
