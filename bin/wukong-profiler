@@ -1,39 +1,82 @@
 #!/usr/bin/env node
-import { Command } from "commander";
-import chalk from "chalk";
-import { createProfiler } from "../src/utils/profiler.mjs";
-import { formatTime } from "../src/utils/format.mjs";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import chalk from 'chalk'
+import { Command } from 'commander'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import open from "open"; 
+
+import { generateReport } from '../src/report.mjs'
+import { formatTime } from '../src/utils/format.mjs'
+import { createProfiler } from '../src/utils/profiler.mjs'
 
 // 获取 package.json 的版本号
 // 兼容 Windows
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
-const pkgPath = path.resolve(__dirname, "../package.json");
-const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+const pkgPath = path.resolve(__dirname, '../package.json')
+const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'))
 
-
-const program = new Command();
+const program = new Command()
 
 program
-  .name("wukong-profiler")
+  .name('wukong-profiler')
   .description(
-    "🔥 Node/CLI profiler with flame graph, Chrome Trace and HOT detection"
+    '🔥 Node/CLI profiler with flame graph, Chrome Trace and HOT detection'
   )
-  .version(pkg.version, "-v, --version", "show version")
-  .option("--profile", "save profile.json")
-  .option("--flame", "flame-like console output")
-  .option("--trace <file>", "Chrome Trace export file")
-  .option("--hot-threshold <n>", "HOT step threshold", parseFloat, 0.8)
-  .option("--fail-on-hot", "exit with non-zero if HOT step detected")
-  .option("--diff-base <file>", "baseline profile for regression check")
-  .option("--diff-threshold <n>", "regression diff threshold", parseFloat, 0.2)
-  .parse(process.argv);
+  .version(pkg.version, '-v, --version', 'show version')
 
-const opts = program.opts();
+/* ------------------------------
+   profile / runtime options
+--------------------------------*/
+
+program
+  .option('--profile', 'save profile.json')
+  .option('--flame', 'flame-like console output')
+  .option('--trace <file>', 'Chrome Trace export file')
+  .option('--hot-threshold <n>', 'HOT step threshold', parseFloat, 0.8)
+  .option('--fail-on-hot', 'exit with non-zero if HOT step detected')
+  .option('--diff-base <file>', 'baseline profile for regression check')
+  .option('--diff-threshold <n>', 'regression diff threshold', parseFloat, 0.2)
+
+/* ------------------------------
+   report subcommand
+--------------------------------*/
+
+program
+  .command('report <profile>')
+  .description('📊 Generate HTML report from profile.json')
+  .option('-o, --output <file>', 'output html file', 'wukong-report.html')
+  .option('--open', 'open the report in default browser after generation')
+  .action((profile, options) => {
+    // options 就是最后一个参数，包含 output
+    const output = options.output
+
+    // TODO: remove debug log before production
+    console.log('✅', 'output', output)
+
+    if (!fs.existsSync(profile)) {
+      console.error(`❌ profile file not found: ${profile}`)
+      process.exit(1)
+    }
+
+    const json = JSON.parse(fs.readFileSync(profile, 'utf-8'))
+
+    const html = generateReport(json)
+    fs.writeFileSync(output, html, 'utf8')
+
+    console.log(`✅ report generated: ${output}`)
+    if (options.open) {
+      open(output)
+        .then(() => console.log(`🌐 report opened in browser`))
+        .catch((err) => console.error('❌ failed to open report', err))
+    }
+  })
+
+program.parse(process.argv)
+
+const opts = program.opts()
 
 const profiler = createProfiler({
   enabled: opts.profile || opts.flame || !!opts.trace || !!opts.diffBase,
@@ -42,19 +85,19 @@ const profiler = createProfiler({
   hotThreshold: opts.hotThreshold,
   failOnHot: opts.failOnHot,
   diffBaseFile: opts.diffBase,
-  diffThreshold: opts.diffThreshold,
-});
+  diffThreshold: opts.diffThreshold
+})
 
-console.log(chalk.green("🔥 Wukong Profiler CLI started"));
+console.log(chalk.green('🔥 Wukong Profiler CLI started'))
 console.log(
-  chalk.gray("Use profiler.step(name, fn) in your code or CLI script")
-);
+  chalk.gray('Use profiler.step(name, fn) in your code or CLI script')
+)
 
 // 输出 total 计时信息
-process.on("exit", () => {
-  const profile = profiler.end("Total");
+process.on('exit', () => {
+  const profile = profiler.end('Total')
   console.log(
-    chalk.cyan("Profiler finished. Total:"),
+    chalk.cyan('Profiler finished. Total:'),
     formatTime(profile.total)
-  );
-});
+  )
+})

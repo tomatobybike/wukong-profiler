@@ -32,6 +32,31 @@ npx wukong-profiler [options]
 npx wukong-profiler --flame --trace trace.json --hot-threshold 0.8 --fail-on-hot
 ```
 
+### 运行 Profiler
+
+```bash
+# 简单运行
+npx wukong-profiler --flame --trace trace.json
+
+# 设置 HOT 阈值
+npx wukong-profiler --hot-threshold 0.8 --fail-on-hot
+
+# 使用基准 profile 检测性能回归
+npx wukong-profiler --diff-base baseline.json --diff-threshold 0.2
+```
+
+### 生成 HTML 报告
+
+````bash
+# 从 profile.json 生成 HTML 报告
+npx wukong-profiler report ./profile.json
+
+# 生成并自动在浏览器打开
+npx wukong-profiler report ./profile.json --open
+
+# 指定输出 HTML 文件
+npx wukong-profiler report ./profile.json -o my-report.html
+
 ### CLI 参数说明
 
 | 参数                   | 说明                                          |
@@ -72,7 +97,7 @@ profiler.step('处理数据', () => {
 })
 
 profiler.end('总耗时')
-```
+````
 
 ---
 

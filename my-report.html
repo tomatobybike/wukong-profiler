@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Wukong Profiler Report</title>
+<style>
+body { font-family: system-ui; padding: 20px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { padding: 8px; border-bottom: 1px solid #eee; }
+.hot { background: #ffe5e5; }
+</style>
+</head>
+<body>
+<h1>🔥 Wukong Profiler Report</h1>
+<p>Total: 125.39 ms</p>
+
+<table>
+<thead>
+<tr>
+  <th>Step</th>
+  <th>Duration</th>
+  <th>Ratio</th>
+  <th>Source</th>
+</tr>
+</thead>
+<tbody>
+
+    <tr class="hot">
+      <td>load data</td>
+      <td>121.30 ms</td>
+      <td>96.7%</td>
+      <td>file:///Users/tomatoboy/Develop/Github/NodeJs/wukong-profiler/src/utils/profiler.mjs:134</td>
+    </tr>
+    <tr class="">
+      <td>sync work</td>
+      <td>2.11 ms</td>
+      <td>1.7%</td>
+      <td></td>
+    </tr>
+</tbody>
+</table>
+</body>
+</html>

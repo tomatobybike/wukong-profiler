@@ -27,6 +27,32 @@ npx wukong-profiler [options]
 npx wukong-profiler --flame --trace trace.json --hot-threshold 0.8 --fail-on-hot
 ```
 
+### Run profiler
+
+```bash
+# Simple run
+npx wukong-profiler --flame --trace trace.json
+
+# Set HOT threshold
+npx wukong-profiler --hot-threshold 0.8 --fail-on-hot
+
+# With baseline profile for regression detection
+npx wukong-profiler --diff-base baseline.json --diff-threshold 0.2
+```
+
+### Generate HTML report
+
+```bash
+# Generate HTML report from profile.json
+npx wukong-profiler report ./profile.json
+
+# Generate and open automatically in browser
+npx wukong-profiler report ./profile.json --open
+
+# Specify output HTML file
+npx wukong-profiler report ./profile.json -o my-report.html
+```
+
 **Options:**
 
 | Option                 | Description                                             |
@@ -141,7 +167,7 @@ drag to Load the generated trace file.
 
 ### 📊 Profile Summary (Top HOT Paths)
 
-```js
+````js
 const summary = profiler.summary({ top: 3 });
 
 summary.top.forEach(step => {
@@ -170,7 +196,7 @@ await profiler.measure('outer', async () => {
 
 const { total, events, exitCode } = profiler.end('Total')
 console.log('Total time:', total, 'ms')
-```
+````
 
 - `measure(name, fn)` : measure a function (sync/async)
 - `step(name)` : manually log a step
