@@ -150,6 +150,14 @@ https://ui.perfetto.dev
 
 ---
 
+### 📊 性能摘要（Top HOT 路径）
+
+```js
+const summary = profiler.summary({ top: 3 })
+```
+
+---
+
 ## API 使用示例
 
 ```js
@@ -197,6 +205,7 @@ console.log('总耗时:', total, 'ms')
 ---
 
 ## 🔍 Keywords
+
 <!--
 Node.js profiler, JavaScript profiler, Node performance analysis, CLI profiler,
 Flame Graph, Flame Chart, Chrome Trace, Chrome tracing, Perfetto,

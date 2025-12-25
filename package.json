@@ -35,6 +35,10 @@
     "README.zh.md"
   ],
   "scripts": {
+    "test": "node --test",
+    "basic-example": "node examples/basic.mjs",
+    "async-example": "node examples/async.mjs",
+    "flame-example": "node examples/flame.mjs",
     "check:npm:login": "node scripts/check-npm-login.mjs",
     "format": "prettier --write \"src/**/*.{js,mjs}\"",
     "lint": "eslint src --ext .js,.mjs src",

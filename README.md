@@ -139,6 +139,17 @@ drag to Load the generated trace file.
 
 ---
 
+### 📊 Profile Summary (Top HOT Paths)
+
+```js
+const summary = profiler.summary({ top: 3 });
+
+summary.top.forEach(step => {
+  console.log(step.path, step.ratio);
+});
+
+---
+
 ## API Usage
 
 ```js
@@ -176,6 +187,7 @@ console.log('Total time:', total, 'ms')
 - Profile diff for performance regression detection
 
 ## 🔍 关键词
+
 <!--
 Node.js profiler, JavaScript profiler, Node performance analysis, CLI profiler,
 Flame Graph, Flame Chart, Chrome Trace, Chrome tracing, Perfetto,
