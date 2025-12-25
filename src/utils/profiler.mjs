@@ -16,15 +16,18 @@ export const createProfiler = ({
   diffThreshold = 0.2,
 } = {}) => {
   const start = process.hrtime.bigint();
-  let last = start;
   const stack = [];
   const events = [];
 
   const toMs = (a, b) => Number(b - a) / 1e6;
 
+  /**
+   * Measure a sync or async step
+   */
   const step = (name, fn) => {
     const parent = stack[stack.length - 1];
     const startTime = process.hrtime.bigint();
+
     const node = {
       name,
       start: toMs(start, startTime),
@@ -32,6 +35,7 @@ export const createProfiler = ({
       depth: stack.length,
       children: [],
     };
+
     if (parent) parent.children.push(node);
     stack.push(node);
 
@@ -42,28 +46,18 @@ export const createProfiler = ({
       stack.pop();
     };
 
-    if (typeof fn === "function") {
-      try {
-        return fn();
-      } finally {
-        finish();
-      }
-    } else {
+    try {
+      return fn?.();
+    } finally {
       finish();
     }
   };
 
+  /**
+   * Alias of step, semantic sugar
+   */
   const measure = async (name, fn) => {
-    const startStep = process.hrtime.bigint();
-    let result;
-    try {
-      result = fn.constructor.name === "AsyncFunction" ? await fn() : fn();
-    } finally {
-      const endStep = process.hrtime.bigint();
-      const duration = nowMs(startStep, endStep);
-      step(name, { duration });
-    }
-    return result;
+    return step(name, async () => await fn());
   };
 
   const end = (label = "Total") => {
@@ -85,7 +79,7 @@ export const createProfiler = ({
           if (hot) hasHot = true;
 
           console.log(
-            chalk.gray("  ".repeat(e.depth) + "├─"),
+            chalk.gray(`${"  ".repeat(e.depth)}├─`),
             chalk.white(e.name.padEnd(22)),
             chalk.yellow(formatTime(e.duration)),
             chalk.gray(makeBar(ratio)),
@@ -101,11 +95,14 @@ export const createProfiler = ({
 
     const profile = { total, events };
 
-    if (traceFile) exportChromeTrace(events, traceFile);
+    if (traceFile) {
+      exportChromeTrace(events, traceFile);
+    }
 
     if (diffBaseFile && fs.existsSync(diffBaseFile)) {
       const base = JSON.parse(fs.readFileSync(diffBaseFile, "utf8"));
       const regressions = diffProfiles(base, profile, diffThreshold);
+
       if (regressions.length) {
         console.log(chalk.red("\n⚠ Performance Regression Detected:\n"));
         regressions.forEach((r) =>
@@ -121,8 +118,9 @@ export const createProfiler = ({
       }
     }
 
-    if (enabled)
+    if (enabled) {
       fs.writeFileSync("profile.json", JSON.stringify(profile, null, 2));
+    }
 
     if (failOnHot && hasHot) {
       console.log(chalk.red("\n🔥 HOT step detected — failing CI"));
@@ -132,5 +130,5 @@ export const createProfiler = ({
     return profile;
   };
 
-  return { step, end, measure };
+  return { step, measure, end };
 };

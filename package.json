@@ -2,17 +2,6 @@
   "name": "wukong-profiler",
   "version": "1.0.0",
   "description": "🔥 高性能 CLI/Node Profiler，支持 Flame Graph、Chrome Trace、HOT 步骤检测、性能回归分析",
-  "main": "src/index.mjs",
-  "type": "module",
-  "bin": {
-    "wukong-profiler": "./bin/wukong-profiler"
-  },
-  "files": [
-    "bin/",
-    "src/",
-    "README.md",
-    "README.zh.md"
-  ],
   "keywords": [
     "profiler",
     "flamegraph",
@@ -23,14 +12,81 @@
     "chrome-trace",
     "ci"
   ],
-  "author": "Your Name <you@example.com>",
+  "homepage": "https://tomatobybike.github.io/md-structure/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomatobybike/md-structure"
+  },
   "license": "MIT",
+  "author": "Tom <tomatobybike@gmail.com>",
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*",
+    "#utils/*": "src/utils/*"
+  },
+  "main": "src/index.mjs",
+  "bin": {
+    "wukong-profiler": "./bin/wukong-profiler"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "README.md",
+    "README.zh.md"
+  ],
+  "scripts": {
+    "check:npm:login": "node scripts/check-npm-login.mjs",
+    "format": "prettier --write \"src/**/*.{js,mjs}\"",
+    "lint": "eslint src --ext .js,.mjs src",
+    "lint:fix": "eslint src --ext .js,.mjs --fix",
+    "pack": "npm pack",
+    "prepare": "husky install",
+    "prepublishOnly": "yarn lint",
+    "prettierall": "npx prettier --write 'src/**/*.{js,jsx}'",
+    "push:tags": "git push origin main --follow-tags",
+    "prerelease": "yarn lint",
+    "release": "yarn check:npm:login && yarn release:patch && yarn push:tags && npm publish",
+    "release:major": "yarn lint && standard-version --release-as major",
+    "release:minor": "yarn lint && standard-version --release-as minor",
+    "release:patch": "yarn lint && standard-version --release-as patch",
+    "sort": "sort-package-json"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "package.json": [
+      "sort-package-json"
+    ],
+    "src/**/*.js": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  },
   "dependencies": {
     "chalk": "^5.3.0",
     "commander": "^11.0.0"
   },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "5.2.2",
+    "eslint": "8.57.1",
+    "eslint-config-airbnb-base": "15.0.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-import-resolver-alias": "1.1.2",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-prettier": "5.5.4",
+    "eslint-plugin-simple-import-sort": "12.1.1",
+    "husky": "9.1.7",
+    "lint-staged": "16.2.7",
+    "prettier": "3.6.2",
+    "prettier-plugin-packagejson": "2.5.19",
+    "sort-package-json": "3.4.0",
+    "standard-version": "9.5.0"
+  },
+  "packageManager": "yarn@1.22.22",
   "engines": {
     "node": ">=18.0.0"
-  },
-  "packageManager": "yarn@1.22.22"
+  }
 }

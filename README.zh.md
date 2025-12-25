@@ -1,11 +1,16 @@
 # wukong-profiler
 
-🔥 高性能 Node/CLI Profiler，支持：
+🔥 **高性能 Node / CLI 性能分析器（Profiler）**，支持：
 
-- 嵌套步骤（真正 Flame Graph）
-- Chrome Trace 导出（`--trace trace.json`）
-- HOT 步骤检测，可在 CI 失败
-- 性能回归检测（profile diff）
+- ✅ **真正的嵌套步骤**（真实 Flame Graph 结构）
+
+- ✅ **Chrome Trace 导出**（`--trace trace.json`）
+
+- ✅ **HOT 步骤检测**（支持 CI 直接失败）
+
+- ✅ **Profile Diff**（用于性能回退 / 回归检测）
+
+---
 
 ## 安装
 
@@ -13,90 +18,191 @@
 npm install wukong-profiler
 ```
 
-或直接通过 `npx` 使用：
+或直接使用 `npx`：
 
 ```bash
 npx wukong-profiler [options]
 ```
 
---
+---
 
-## CLI 使用示例
+## CLI 使用方式
 
 ```bash
 npx wukong-profiler --flame --trace trace.json --hot-threshold 0.8 --fail-on-hot
 ```
 
-**选项说明：**
+### CLI 参数说明
 
-| 选项                   | 描述                                        |
-| ---------------------- | ------------------------------------------- |
-| `--profile`            | 保存 profile JSON 供分析使用                |
-| `--flame`              | 控制台显示 Flame Graph 风格日志             |
-| `--trace <file>`       | 导出 Chrome Trace JSON 文件                 |
-| `--hot-threshold <n>`  | HOT 步骤阈值（默认 0.8）                    |
-| `--fail-on-hot`        | HOT 步骤超过阈值时退出非零状态码（CI 卡点） |
-| `--diff-base <file>`   | 与基线 profile 比较，检测性能回归           |
-| `--diff-threshold <n>` | 回归差异阈值（默认 0.2）                    |
+| 参数                   | 说明                                          |
+| ---------------------- | --------------------------------------------- |
+| `--profile`            | 保存 profile JSON 文件，用于后续分析          |
+| `--flame`              | 在控制台输出 Flame 风格的树状结果             |
+| `--trace <file>`       | 导出 Chrome Trace JSON 文件                   |
+| `--hot-threshold <n>`  | HOT 步骤占比阈值（默认：0.8）                 |
+| `--fail-on-hot`        | 如果存在 HOT 步骤，进程以非 0 退出（CI 失败） |
+| `--diff-base <file>`   | 与基准 profile 对比，检测性能回退             |
+| `--diff-threshold <n>` | 性能回退阈值（默认：0.2）                     |
+| `-v, --version`        | 显示版本号                                    |
+| `-h, --help`           | 显示帮助信息                                  |
 
 ---
 
-## 编程使用示例
+## 编程方式（Programmatic Usage）
 
 ```js
-import { createProfiler } from "wukong-profiler";
+import { createProfiler } from 'wukong-profiler'
 
 const profiler = createProfiler({
   enabled: true,
   flame: true,
-  traceFile: "trace.json",
+  traceFile: 'trace.json',
   hotThreshold: 0.8,
   failOnHot: true,
-  diffBaseFile: "baseline.json",
-  diffThreshold: 0.2,
-});
+  diffBaseFile: 'baseline.json',
+  diffThreshold: 0.2
+})
 
-profiler.step("load data", () => {
-  // 重操作
-});
-profiler.step("process data", () => {
-  // 另一重操作
-});
+profiler.step('加载数据', () => {
+  // 重任务
+})
 
-profiler.end("Total");
+profiler.step('处理数据', () => {
+  // 另一个重任务
+})
+
+profiler.end('总耗时')
 ```
 
-## API 使用
+---
+
+## API 文档
+
+### `createProfiler(options)`
+
+创建并返回一个 profiler 实例。
+
+#### Options 参数说明
+
+| 参数名          | 默认值      | 说明                             |
+| --------------- | ----------- | -------------------------------- |
+| `enabled`       | `false`     | 是否启用 profiler（输出 & JSON） |
+| `verbose`       | `false`     | 输出更详细的日志                 |
+| `flame`         | `false`     | 输出 Flame 风格的树结构          |
+| `slowThreshold` | `500`       | 慢步骤阈值（毫秒）               |
+| `hotThreshold`  | `0.8`       | HOT 步骤占比阈值                 |
+| `traceFile`     | `undefined` | Chrome Trace 输出文件            |
+| `failOnHot`     | `false`     | 检测到 HOT 步骤时 CI 失败        |
+| `diffBaseFile`  | `undefined` | 用于 diff 的基准 profile         |
+| `diffThreshold` | `0.2`       | 性能回退阈值                     |
+
+---
+
+### `profiler.step(name, fn)`
+
+测量一个 **同步步骤**。
+
+---
+
+### `profiler.measure(name, fn)`
+
+测量一个 **同步或异步函数**。
+
+---
+
+### `profiler.end(label?)`
+
+结束 profiling，并输出最终结果。
+
+---
+
+## 示例
+
+```bash
+node examples/basic.mjs
+node examples/flame.mjs
+node examples/async.mjs
+```
+
+---
+
+## Chrome Trace 使用方式
+
+```bash
+node examples/basic.mjs
+```
+
+然后在浏览器中打开：
+
+```text
+chrome://tracing
+```
+
+加载生成的 trace 文件。
+
+或使用 Perfetto（推荐）：
+
+```text
+https://ui.perfetto.dev
+```
+
+将生成的 trace 文件拖入即可查看。
+
+---
+
+## API 使用示例
 
 ```js
-import { createProfiler } from "wukong-profiler";
+import { createProfiler } from 'wukong-profiler'
 
-const profiler = createProfiler({ enabled: true, flame: true });
+const profiler = createProfiler({ enabled: true, flame: true })
 
-// 测试单个函数
-await profiler.measure("heavyTask", async () => {
-  await doHeavyWork();
-});
+// 测量函数
+await profiler.measure('heavyTask', async () => {
+  await doHeavyWork()
+})
 
 // 嵌套步骤
-await profiler.measure("outer", async () => {
-  await profiler.measure("inner1", task1);
-  await profiler.measure("inner2", task2);
-});
+await profiler.measure('outer', async () => {
+  await profiler.measure('inner1', task1)
+  await profiler.measure('inner2', task2)
+})
 
-const { total, events, exitCode } = profiler.end("Total");
-console.log("总耗时:", total, "ms");
+const { total, events, exitCode } = profiler.end('Total')
+console.log('总耗时:', total, 'ms')
 ```
 
-- `measure(name, fn)` : 测量函数耗时（同步或异步）
-- `step(name)` : 手动记录步骤
-- `end(label)` : 结束 profiling，可生成 Chrome Trace JSON
--
+### API 说明
 
-**功能亮点：**
+- `measure(name, fn)`：测量函数（支持 sync / async）
 
-- 支持嵌套步骤，生成 Flame Graph
-- 慢步骤 (> 阈值) 自动标注 🔥 HOT
-- HOT 步骤可触发非零退出码，适合 CI 卡点
-- 自动生成 Chrome Trace，可在 `chrome://tracing` 查看
-- profile diff 检测性能回归
+- `step(name)`：手动记录一个步骤
+
+- `end(label)`：结束 profiling，可导出 Chrome Trace
+
+---
+
+## 核心特性总结
+
+- 🔥 **支持嵌套步骤**，天然适合 Flame Graph
+
+- 🔥 **慢步骤 / HOT 步骤自动标记**
+
+- 🔥 **CI 友好**：性能问题可直接让构建失败
+
+- 🔥 **Chrome Trace 导出**，可视化精确到毫秒
+
+- 🔥 **Profile Diff**，用于性能回退检测
+
+---
+
+## 🔍 Keywords
+<!--
+Node.js profiler, JavaScript profiler, Node performance analysis, CLI profiler,
+Flame Graph, Flame Chart, Chrome Trace, Chrome tracing, Perfetto,
+Performance regression detection, Profile diff, CI performance check,
+HOT path detection, Slow function detection,
+Async performance profiling, Nested performance steps,
+Node.js benchmarking, Build performance monitoring,
+Developer tooling, DevOps performance, Continuous Integration profiling
+-->
