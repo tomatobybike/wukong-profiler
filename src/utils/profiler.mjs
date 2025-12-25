@@ -1,8 +1,8 @@
 import chalk from "chalk";
 import fs from "fs";
-import { formatTime, makeBar } from "./format.js";
-import { exportChromeTrace } from "./trace.js";
-import { diffProfiles } from "./diff.js";
+import { formatTime, makeBar } from "./format.mjs";
+import { exportChromeTrace } from "./trace.mjs";
+import { diffProfiles } from "./diff.mjs";
 
 export const createProfiler = ({
   enabled = false,

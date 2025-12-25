@@ -1,4 +1,4 @@
-// testFunction.js
+// testFunction.mjs
 import { measure, createProfiler } from 'wukong-profiler'
 import fs from 'fs'
 

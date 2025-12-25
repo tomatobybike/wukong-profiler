@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import chalk from "chalk";
-import { createProfiler } from "../src/utils/profiler.js";
-import { formatTime } from "../src/utils/format.js";
+import { createProfiler } from "../src/utils/profiler.mjs";
+import { formatTime } from "../src/utils/format.mjs";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
