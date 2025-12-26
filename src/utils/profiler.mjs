@@ -10,11 +10,11 @@ import { exportChromeTrace } from './trace.mjs'
 /* ----------------------------------
    Optional sourcemap resolver
 ----------------------------------- */
-let sourceMapConsumer = null
+let SourceMapConsumer = null
 try {
   // optional dependency
   const sm = await import('source-map')
-  sourceMapConsumer = sm.SourceMapConsumer
+  SourceMapConsumer = sm.SourceMapConsumer
 } catch {
   // ignore – sourcemap is optional
 }
@@ -67,14 +67,14 @@ export const createProfiler = ({
       column: Number(column)
     }
 
-    if (!captureSource || !sourceMapConsumer) return source
+    if (!captureSource || !SourceMapConsumer) return source
 
     try {
       const mapFile = `${file}.map`
       if (!fs.existsSync(mapFile)) return source
 
       const rawMap = JSON.parse(fs.readFileSync(mapFile, 'utf8'))
-      const consumer = await new sourceMapConsumer(rawMap)
+      const consumer = await new SourceMapConsumer(rawMap)
 
       const pos = consumer.originalPositionFor({
         line: source.line,

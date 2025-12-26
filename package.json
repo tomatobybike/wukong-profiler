@@ -1,6 +1,6 @@
 {
   "name": "wukong-profiler",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "🔥 高性能 CLI/Node Profiler，支持 Flame Graph、Chrome Trace、HOT 步骤检测、性能回归分析",
   "keywords": [
     "profiler",
@@ -12,10 +12,10 @@
     "chrome-trace",
     "ci"
   ],
-  "homepage": "https://tomatobybike.github.io/md-structure/",
+  "homepage": "https://tomatobybike.github.io/wukong-profiler/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tomatobybike/md-structure"
+    "url": "git+https://github.com/tomatobybike/wukong-profiler"
   },
   "license": "MIT",
   "author": "Tom <tomatobybike@gmail.com>",
@@ -49,7 +49,8 @@
     "prettierall": "npx prettier --write 'src/**/*.{js,jsx}'",
     "push:tags": "git push origin main --follow-tags",
     "prerelease": "yarn lint",
-    "release": "yarn check:npm:login && yarn release:patch && yarn push:tags && npm publish",
+    "release": "yarn check:npm:login && yarn release:patch && npm publish && yarn push:tags",
+    "release:rollback": "git reset --hard HEAD~1 && git tag -d $(git tag --points-at HEAD~1)",
     "release:major": "yarn lint && standard-version --release-as major",
     "release:minor": "yarn lint && standard-version --release-as minor",
     "release:patch": "yarn lint && standard-version --release-as patch",

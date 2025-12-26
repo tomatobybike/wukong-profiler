@@ -10,6 +10,8 @@
 
 - ✅ **Profile Diff**（用于性能回退 / 回归检测）
 
+## 中文 | [English](./README.md)
+
 ---
 
 ## 安装
@@ -228,8 +230,6 @@ console.log('总耗时:', total, 'ms')
 - 🔥 **Profile Diff**，用于性能回退检测
 
 ---
-
-## 🔍 Keywords
 
 <!--
 Node.js profiler, JavaScript profiler, Node performance analysis, CLI profiler,
