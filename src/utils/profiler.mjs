@@ -55,8 +55,7 @@ export const createProfiler = ({
     const top = frames[0]
 
     const match =
-      top.match(/\((.*):(\d+):(\d+)\)/) ||
-      top.match(/at (.*):(\d+):(\d+)/)
+      top.match(/\((.*):(\d+):(\d+)\)/) || top.match(/at (.*):(\d+):(\d+)/)
 
     if (!match) return { raw: top }
 

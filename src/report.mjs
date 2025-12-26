@@ -1,6 +1,8 @@
 // report.mjs
 export const generateReport = (profile) => {
-  const rows = profile.events.map(e => `
+  const rows = profile.events
+    .map(
+      (e) => `
     <tr class="${e.duration / profile.total > 0.8 ? 'hot' : ''}">
       <td>${e.name}</td>
       <td>${e.duration.toFixed(2)} ms</td>
@@ -12,7 +14,9 @@ export const generateReport = (profile) => {
             : `${e.source.file}:${e.source.line}`
           : ''
       }</td>
-    </tr>`).join('')
+    </tr>`
+    )
+    .join('')
 
   const html = `<!doctype html>
 <html>
