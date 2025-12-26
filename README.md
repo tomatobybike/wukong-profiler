@@ -7,6 +7,10 @@
 - HOT step detection with CI failure
 - Profile diff for performance regression detection
 
+## English | [简体中文](./README.zh-CN.md)
+
+---
+
 ## Installation
 
 ```bash
@@ -212,7 +216,7 @@ console.log('Total time:', total, 'ms')
 - Chrome Trace export compatible with Chrome's `chrome://tracing`
 - Profile diff for performance regression detection
 
-## 🔍 关键词
+## 🔍 Keywords
 
 <!--
 Node.js profiler, JavaScript profiler, Node performance analysis, CLI profiler,
