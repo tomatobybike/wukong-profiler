@@ -1,5 +1,23 @@
 # wukong-profiler
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/wukong-profiler">
+    <img src="https://img.shields.io/npm/v/wukong-profiler.svg" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/wukong-profiler">
+    <img src="https://img.shields.io/npm/dm/wukong-profiler.svg" alt="downloads">
+  </a>
+  <a href="https://github.com/tomatobybike/wukong-profiler/blob/master/LICENSE">
+    <img src="https://img.shields.io/github/license/tomatobybike/wukong-profiler.svg" alt="license">
+  </a>
+  <a href="https://github.com/tomatobybike/wukong-profiler">
+    <img src="https://img.shields.io/github/stars/tomatobybike/wukong-profiler.svg?style=social" alt="GitHub stars">
+  </a>
+  <a href="https://github.com/tomatobybike/wukong-profiler/issues">
+    <img src="https://img.shields.io/github/issues/tomatobybike/wukong-profiler.svg" alt="issues">
+  </a>
+</p>
+
 🔥 High-performance Node/CLI profiler supporting:
 
 - Nested steps (true Flame Graph)
