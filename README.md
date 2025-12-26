@@ -216,7 +216,7 @@ console.log('Total time:', total, 'ms')
 - Chrome Trace export compatible with Chrome's `chrome://tracing`
 - Profile diff for performance regression detection
 
-## 🔍 Keywords
+
 
 <!--
 Node.js profiler, JavaScript profiler, Node performance analysis, CLI profiler,

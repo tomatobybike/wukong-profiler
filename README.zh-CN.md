@@ -231,8 +231,6 @@ console.log('总耗时:', total, 'ms')
 
 ---
 
-## 🔍 关键词
-
 <!--
 Node.js profiler, JavaScript profiler, Node performance analysis, CLI profiler,
 Flame Graph, Flame Chart, Chrome Trace, Chrome tracing, Perfetto,
