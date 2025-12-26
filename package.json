@@ -12,10 +12,10 @@
     "chrome-trace",
     "ci"
   ],
-  "homepage": "https://tomatobybike.github.io/md-structure/",
+  "homepage": "https://tomatobybike.github.io/wukong-profiler/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tomatobybike/md-structure"
+    "url": "git+https://github.com/tomatobybike/wukong-profiler"
   },
   "license": "MIT",
   "author": "Tom <tomatobybike@gmail.com>",
@@ -49,7 +49,7 @@
     "prettierall": "npx prettier --write 'src/**/*.{js,jsx}'",
     "push:tags": "git push origin main --follow-tags",
     "prerelease": "yarn lint",
-    "release": "yarn check:npm:login && yarn release:patch && npm publish && yarn push:tags",
+    "release": "yarn check:npm:login  && npm publish && yarn push:tags",
     "release:rollback": "git reset --hard HEAD~1 && git tag -d $(git tag --points-at HEAD~1)",
     "release:major": "yarn lint && standard-version --release-as major",
     "release:minor": "yarn lint && standard-version --release-as minor",
