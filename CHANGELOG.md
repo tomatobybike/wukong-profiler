@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.5](https://github.com/tomatobybike/wukong-profiler/compare/v1.0.4...v1.0.5) (2025-12-26)
+
+
+### Features
+
+* 🎸 upgrade dependencies ([bfc033b](https://github.com/tomatobybike/wukong-profiler/commit/bfc033bd42fe69e15ce3bb2f4a39d17ed7ae5e39))
+
 ### [1.0.4](https://github.com/tomatobybike/wukong-profiler/compare/v1.0.3...v1.0.4) (2025-12-26)
 
 ### [1.0.3](https://github.com/tomatobybike/wukong-profiler/compare/v1.0.2...v1.0.3) (2025-12-26)
