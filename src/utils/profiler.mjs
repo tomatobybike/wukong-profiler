@@ -1,9 +1,6 @@
 import chalk from 'chalk'
 import fs from 'fs'
 
-// import path from 'path'
-// import { fileURLToPath } from 'url'
-
 import { diffProfiles } from './diff.mjs'
 import { formatTime, makeBar } from './format.mjs'
 import { exportChromeTrace } from './trace.mjs'
@@ -20,9 +17,6 @@ try {
 }
 
 /* ---------------------------------- */
-
-// const __filename = fileURLToPath(import.meta.url)
-// const __dirname = path.dirname(__filename)
 
 export const createProfiler = ({
   enabled = false,
@@ -130,7 +124,7 @@ export const createProfiler = ({
   }
 
   /* ----------------------------------
-     STEP (sync)
+     CORE STEP (sync + async transparent)
   ----------------------------------- */
   const step = (name, fn) => {
     const parent = stack[stack.length - 1]
@@ -169,9 +163,13 @@ export const createProfiler = ({
 
     try {
       const result = fn?.()
+
+      // async function → 自动升级为 async step
       if (result && typeof result.then === 'function') {
+        node.async = true
         return result.finally(finish)
       }
+
       finish()
       return result
     } catch (e) {
@@ -180,10 +178,11 @@ export const createProfiler = ({
     }
   }
 
+  // v1.0：measure = step（完全统一）
   const measure = step
 
   /* ----------------------------------
-     STEP ASYNC
+     STEP ASYNC (explicit async version)
   ----------------------------------- */
   const stepAsync = async (name, fn) => {
     const parent = stack[stack.length - 1]
@@ -205,6 +204,7 @@ export const createProfiler = ({
     stack.push(node)
 
     try {
+      // 核心：返回 fn 的返回值
       return await fn()
     } finally {
       const endTime = process.hrtime.bigint()
@@ -228,11 +228,13 @@ export const createProfiler = ({
   const end = (label = 'Total') => {
     const total = toMs(start, process.hrtime.bigint())
     let hasHot = false
+
     for (const e of events) {
       if (e.duration / total >= hotThreshold) {
         hasHot = true
       }
     }
+
     if (enabled || verbose) {
       console.log(
         chalk.cyan('⏱'),
