@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.6](https://github.com/tomatobybike/wukong-profiler/compare/v1.0.5...v1.0.6) (2025-12-27)
+
+
+### Features
+
+* 🎸 add stepAsync and summary api ([4a9b39e](https://github.com/tomatobybike/wukong-profiler/commit/4a9b39ee7b78ca8a4d7e7e927105d1d4146e6ebc))
+
 ### [1.0.5](https://github.com/tomatobybike/wukong-profiler/compare/v1.0.4...v1.0.5) (2025-12-26)
 
 
