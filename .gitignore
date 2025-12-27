@@ -7,8 +7,7 @@ config
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-profile.json
-trace.json
+
 
 # Env files
 .env
@@ -42,6 +41,9 @@ logs
 lint-staged.config.js
 
 md-structure.config.json
+my-report.html
+profile.json
+trace.json
 
 STRUCTURE.md
 

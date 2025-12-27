@@ -1,38 +1,37 @@
 # wukong-profiler
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/wukong-profiler">
-    <img src="https://img.shields.io/npm/v/wukong-profiler.svg" alt="npm version">
-  </a>
-  <a href="https://www.npmjs.com/package/wukong-profiler">
-    <img src="https://img.shields.io/npm/dm/wukong-profiler.svg" alt="downloads">
-  </a>
-  <a href="https://github.com/tomatobybike/wukong-profiler/blob/master/LICENSE">
-    <img src="https://img.shields.io/github/license/tomatobybike/wukong-profiler.svg" alt="license">
-  </a>
-  <a href="https://github.com/tomatobybike/wukong-profiler">
-    <img src="https://img.shields.io/github/stars/tomatobybike/wukong-profiler.svg?style=social" alt="GitHub stars">
-  </a>
-  <a href="https://github.com/tomatobybike/wukong-profiler/issues">
-    <img src="https://img.shields.io/github/issues/tomatobybike/wukong-profiler.svg" alt="issues">
-  </a>
-</p>
+<p align="center"> <a href="https://www.npmjs.com/package/wukong-profiler"> <img src="https://img.shields.io/npm/v/wukong-profiler.svg" alt="npm version"> </a> <a href="https://www.npmjs.com/package/wukong-profiler"> <img src="https://img.shields.io/npm/dm/wukong-profiler.svg" alt="downloads"> </a> <a href="https://github.com/tomatobybike/wukong-profiler/blob/master/LICENSE"> <img src="https://img.shields.io/github/license/tomatobybike/wukong-profiler.svg" alt="license"> </a> <a href="https://github.com/tomatobybike/wukong-profiler"> <img src="https://img.shields.io/github/stars/tomatobybike/wukong-profiler.svg?style=social" alt="GitHub stars"> </a> <a href="https://github.com/tomatobybike/wukong-profiler/issues"> <img src="https://img.shields.io/github/issues/tomatobybike/wukong-profiler.svg" alt="issues"> </a> </p>
 
-🔥 High-performance Node/CLI profiler supporting:
+🔥 **High-performance Node.js / CLI wall-time profiler**, designed for **real async / await workloads**.
 
-- Nested steps (true Flame Graph)
-- Chrome Trace export (`--trace trace.json`)
-- HOT step detection with CI failure
-- Profile diff for performance regression detection
+**Key capabilities:**
+
+- ✅ Accurate async / await wall-time profiling
+
+- ✅ Nested steps (true hierarchical Flame Tree)
+
+- ✅ Automatic HOT / SLOW step detection
+
+- ✅ CPU vs I/O heuristic classification
+
+- ✅ Actionable performance explanations
+
+- ✅ Chrome Trace export (Chrome / Perfetto)
+
+- ✅ Profile diff for regression detection (CI-friendly)
 
 ## English | [简体中文](./README.zh-CN.md)
 
 ---
 
-## Installation
+## 📦 Installation
 
 ```bash
 npm install wukong-profiler
+```
+
+```bash
+yarn add wukong-profiler
 ```
 
 Or use directly via npx:
@@ -43,7 +42,7 @@ npx wukong-profiler [options]
 
 ---
 
-## CLI Usage
+## 🧑‍💻 CLI Usage
 
 ```bash
 npx wukong-profiler --flame --trace trace.json --hot-threshold 0.8 --fail-on-hot
@@ -61,6 +60,19 @@ npx wukong-profiler --hot-threshold 0.8 --fail-on-hot
 # With baseline profile for regression detection
 npx wukong-profiler --diff-base baseline.json --diff-threshold 0.2
 ```
+
+## 🧠 Output Example
+
+```text
+⏱ Total 28.52 s
+├─ getGitLogsFast        957.78 ms  ⚠ SLOW [IO]
+│   ↳ Likely I/O-bound (serial await or blocking I/O)
+├─ getOvertimeStats      26.39 s    🔥 HOT  [CPU]
+│   ↳ Likely CPU-bound (loops or heavy computation)
+│   ↳ Deep call stack — consider flattening logic
+```
+
+###
 
 ### Generate HTML report
 
@@ -91,7 +103,7 @@ npx wukong-profiler report ./profile.json -o my-report.html
 
 ---
 
-## Programmatic Usage
+## 📘 Programmatic Usage
 
 ```js
 import { createProfiler } from 'wukong-profiler'
@@ -106,11 +118,12 @@ const profiler = createProfiler({
   diffThreshold: 0.2
 })
 
-profiler.step('load data', () => {
-  // heavy operation
+profiler.step('load config', () => {
+  // sync work
 })
-profiler.step('process data', () => {
-  // another heavy operation
+
+await profiler.stepAsync('fetch data', async () => {
+  await fetchRemoteData()
 })
 
 profiler.end('Total')
@@ -118,7 +131,33 @@ profiler.end('Total')
 
 ---
 
-## API Reference
+## Async / Await Profiling (Recommended)
+
+`wukong-profiler` **explicitly supports async profiling** via `stepAsync`.
+
+This guarantees correct **wall-time measurement**, even when the event loop is idle.
+
+```js
+await profiler.stepAsync('getGitLogsFast', async () => {
+  await readGitLogs()
+})
+
+await profiler.stepAsync('getOvertimeStats', async () => {
+  await calculateStats()
+})
+```
+
+Why `stepAsync`?
+
+-   ✔ Measures full async duration (not just sync part)
+
+-   ✔ Maintains correct nesting structure
+
+-   ✔ Enables accurate I/O vs CPU classification
+
+---
+
+## 🧩 API Reference
 
 ### `createProfiler(options)`
 
@@ -144,17 +183,64 @@ Returns a profiler instance.
 
 Measure a synchronous step.
 
+```js
+profiler.step('parse config', () => {
+  parseConfig()
+})
+```
+
+### `profiler.stepAsync(name, asyncFn)`
+
+Measure an **async step** with full wall-time accuracy.
+
+```js
+await profiler.stepAsync('fetch users', async () => {
+  await fetchUsers()
+})
+```
+
 ---
 
 ### `profiler.measure(name, fn)`
 
-Measure sync or async function.
+Alias of `step` (sync).
+For async workloads, **prefer `stepAsync`** for clarity.
 
 ---
 
 ### `profiler.end(label?)`
 
 Finish profiling and output results.
+
+```js
+profiler.end('Total')
+```
+
+---
+
+### `profiler.summary(options?)`
+
+Get structured summary data for reporting or CI.
+
+```js
+const summary = profiler.summary({ top: 3 })
+
+summary.top.forEach((step) => {
+  console.log(step.name, step.ratio)
+})
+```
+
+---
+
+### 📊 Profile Summary (Top HOT Paths)
+
+```js
+const summary = profiler.summary({ top: 3 })
+
+summary.top.forEach((step) => {
+  console.log(step.path, step.ratio)
+})
+```
 
 ---
 
@@ -168,10 +254,15 @@ node examples/async.mjs
 
 ---
 
-## Chrome Trace
+## 🧪 Chrome Trace
 
 ```bash
 node examples/basic.mjs
+```
+
+Open:
+
+```bash
 chrome://tracing
 ```
 
@@ -184,57 +275,6 @@ https://ui.perfetto.dev
 ```
 
 drag to Load the generated trace file.
-
----
-
-### 📊 Profile Summary (Top HOT Paths)
-
-````js
-const summary = profiler.summary({ top: 3 });
-
-summary.top.forEach(step => {
-  console.log(step.path, step.ratio);
-});
-
----
-
-## API Usage
-
-```js
-import { createProfiler } from 'wukong-profiler'
-
-const profiler = createProfiler({ enabled: true, flame: true })
-
-// Measure a function
-await profiler.measure('heavyTask', async () => {
-  await doHeavyWork()
-})
-
-// Nested steps
-await profiler.measure('outer', async () => {
-  await profiler.measure('inner1', task1)
-  await profiler.measure('inner2', task2)
-})
-
-const { total, events, exitCode } = profiler.end('Total')
-console.log('Total time:', total, 'ms')
-````
-
-- `measure(name, fn)` : measure a function (sync/async)
-- `step(name)` : manually log a step
-- `end(label)` : end profiling, optionally export Chrome Trace JSON
-
----
-
-**Features:**
-
-- Nested steps for Flame Graph visualization
-- Slow steps (> threshold) marked as HOT 🔥
-- Automatic exit code for CI if HOT steps detected
-- Chrome Trace export compatible with Chrome's `chrome://tracing`
-- Profile diff for performance regression detection
-
-
 
 <!--
 Node.js profiler, JavaScript profiler, Node performance analysis, CLI profiler,

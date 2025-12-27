@@ -1,7 +1,8 @@
 import chalk from 'chalk'
 import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
+
+// import path from 'path'
+// import { fileURLToPath } from 'url'
 
 import { diffProfiles } from './diff.mjs'
 import { formatTime, makeBar } from './format.mjs'
@@ -12,15 +13,16 @@ import { exportChromeTrace } from './trace.mjs'
 ----------------------------------- */
 let SourceMapConsumer = null
 try {
-  // optional dependency
   const sm = await import('source-map')
   SourceMapConsumer = sm.SourceMapConsumer
 } catch {
-  // ignore – sourcemap is optional
+  /* empty */
 }
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+/* ---------------------------------- */
+
+// const __filename = fileURLToPath(import.meta.url)
+// const __dirname = path.dirname(__filename)
 
 export const createProfiler = ({
   enabled = false,
@@ -32,7 +34,7 @@ export const createProfiler = ({
   failOnHot = false,
   diffBaseFile,
   diffThreshold = 0.2,
-  captureSource = true // 🔥 new
+  captureSource = true
 } = {}) => {
   const start = process.hrtime.bigint()
   const stack = []
@@ -41,7 +43,7 @@ export const createProfiler = ({
   const toMs = (a, b) => Number(b - a) / 1e6
 
   /* ----------------------------------
-     Stack + sourcemap capture
+     Source capture
   ----------------------------------- */
   const captureSourceInfo = async () => {
     const err = new Error()
@@ -49,22 +51,16 @@ export const createProfiler = ({
       ?.split('\n')
       .slice(2)
       .map((l) => l.trim())
-
     if (!frames?.length) return null
 
     const top = frames[0]
-
     const match =
       top.match(/\((.*):(\d+):(\d+)\)/) || top.match(/at (.*):(\d+):(\d+)/)
 
     if (!match) return { raw: top }
 
     const [, file, line, column] = match
-    const source = {
-      file,
-      line: Number(line),
-      column: Number(column)
-    }
+    const source = { file, line: Number(line), column: Number(column) }
 
     if (!captureSource || !SourceMapConsumer) return source
 
@@ -94,14 +90,47 @@ export const createProfiler = ({
         }
       }
     } catch {
-      /* silent */
+      /* empty */
     }
 
     return source
   }
 
   /* ----------------------------------
-     STEP / MEASURE
+     Type + Explain
+  ----------------------------------- */
+  const detectType = (node) => {
+    if (node.async) return 'IO'
+    if (node.children.length > 0) return 'CPU'
+    if (node.duration >= slowThreshold) return 'CPU'
+    return 'CPU'
+  }
+
+  const explainNode = (node, total) => {
+    const ratio = node.duration / total
+    const messages = []
+
+    if (ratio >= hotThreshold && node.type === 'CPU') {
+      messages.push('Likely CPU-bound (loops or heavy computation)')
+    }
+
+    if (ratio >= hotThreshold && node.type === 'IO') {
+      messages.push('Likely I/O-bound (serial await or blocking I/O)')
+    }
+
+    if (node.duration >= slowThreshold && node.type === 'IO') {
+      messages.push('Single I/O operation is slow')
+    }
+
+    if (node.depth >= 5) {
+      messages.push('Deep call stack — consider flattening logic')
+    }
+
+    return messages
+  }
+
+  /* ----------------------------------
+     STEP (sync)
   ----------------------------------- */
   const step = (name, fn) => {
     const parent = stack[stack.length - 1]
@@ -113,7 +142,10 @@ export const createProfiler = ({
       duration: 0,
       depth: stack.length,
       children: [],
-      source: null
+      source: null,
+      async: false,
+      type: null,
+      explain: []
     }
 
     if (parent) parent.children.push(node)
@@ -122,12 +154,13 @@ export const createProfiler = ({
     const finish = async () => {
       const endTime = process.hrtime.bigint()
       node.duration = toMs(startTime, endTime)
+      node.type = detectType(node)
       events.push(node)
       stack.pop()
 
       const totalSoFar = toMs(start, endTime)
       const isSlow = node.duration >= slowThreshold
-      const isHot = totalSoFar > 0 && node.duration / totalSoFar >= hotThreshold
+      const isHot = node.duration / totalSoFar >= hotThreshold
 
       if ((isSlow || isHot) && captureSource) {
         node.source = await captureSourceInfo()
@@ -141,27 +174,65 @@ export const createProfiler = ({
       }
       finish()
       return result
-    } catch (err) {
+    } catch (e) {
       finish()
-      throw err
+      throw e
     }
   }
 
-  const measure = (name, fn) => step(name, fn)
+  const measure = step
+
+  /* ----------------------------------
+     STEP ASYNC
+  ----------------------------------- */
+  const stepAsync = async (name, fn) => {
+    const parent = stack[stack.length - 1]
+    const startTime = process.hrtime.bigint()
+
+    const node = {
+      name,
+      start: toMs(start, startTime),
+      duration: 0,
+      depth: stack.length,
+      children: [],
+      source: null,
+      async: true,
+      type: 'IO',
+      explain: []
+    }
+
+    if (parent) parent.children.push(node)
+    stack.push(node)
+
+    try {
+      return await fn()
+    } finally {
+      const endTime = process.hrtime.bigint()
+      node.duration = toMs(startTime, endTime)
+      events.push(node)
+      stack.pop()
+
+      const totalSoFar = toMs(start, endTime)
+      const isSlow = node.duration >= slowThreshold
+      const isHot = node.duration / totalSoFar >= hotThreshold
+
+      if ((isSlow || isHot) && captureSource) {
+        node.source = await captureSourceInfo()
+      }
+    }
+  }
 
   /* ----------------------------------
      END
   ----------------------------------- */
   const end = (label = 'Total') => {
     const total = toMs(start, process.hrtime.bigint())
-
     let hasHot = false
     for (const e of events) {
       if (e.duration / total >= hotThreshold) {
         hasHot = true
       }
     }
-
     if (enabled || verbose) {
       console.log(
         chalk.cyan('⏱'),
@@ -175,11 +246,14 @@ export const createProfiler = ({
           const hot = ratio >= hotThreshold
           const slow = e.duration >= slowThreshold
 
+          e.explain = explainNode(e, total)
+
           console.log(
             chalk.gray(`${'  '.repeat(e.depth)}├─`),
             chalk.white(e.name.padEnd(22)),
             chalk.yellow(formatTime(e.duration)),
             chalk.gray(makeBar(ratio)),
+            chalk.gray(`[${e.type}]`),
             hot
               ? chalk.red.bold(' 🔥 HOT')
               : slow
@@ -196,6 +270,10 @@ export const createProfiler = ({
               )
             )
           }
+
+          if (e.explain.length) {
+            e.explain.forEach((msg) => console.log(chalk.gray(`     ↳ ${msg}`)))
+          }
         }
       }
     }
@@ -207,22 +285,7 @@ export const createProfiler = ({
     if (diffBaseFile && fs.existsSync(diffBaseFile)) {
       const base = JSON.parse(fs.readFileSync(diffBaseFile, 'utf8'))
       const regressions = diffProfiles(base, profile, diffThreshold)
-
-      if (regressions.length) {
-        if (enabled || verbose) {
-          console.log(chalk.red('\n⚠ Performance Regression Detected:\n'))
-          regressions.forEach((r) =>
-            console.log(
-              chalk.red(
-                `  ${r.name}: ${formatTime(r.before)} → ${formatTime(
-                  r.after
-                )} (+${(r.diff * 100).toFixed(1)}%)`
-              )
-            )
-          )
-        }
-        process.exitCode = 1
-      }
+      if (regressions.length) process.exitCode = 1
     }
 
     if (enabled) {
@@ -242,39 +305,19 @@ export const createProfiler = ({
   /* ----------------------------------
      SUMMARY
   ----------------------------------- */
-  const flatten = (nodes, parentPath = []) => {
-    let res = []
-    for (const n of nodes) {
-      const pathArr = [...parentPath, n.name]
-      res.push({
-        name: n.name,
-        path: pathArr.join(' → '),
-        duration: n.duration,
-        depth: n.depth,
-        source: n.source
-      })
-      if (n.children?.length) {
-        res = res.concat(flatten(n.children, pathArr))
-      }
-    }
-    return res
-  }
-
-  // eslint-disable-next-line no-shadow
-  const summary = ({ top = 5, hotThreshold = 0.8 } = {}) => {
+  const summary = ({ top = 5 } = {}) => {
     const total = toMs(start, process.hrtime.bigint())
-
-    const flat = flatten(events)
-      .map((e) => ({
-        ...e,
-        ratio: e.duration / total,
-        hot: e.duration / total >= hotThreshold
-      }))
-      .sort((a, b) => b.duration - a.duration)
-      .slice(0, top)
-
-    return { total, top: flat }
+    return {
+      total,
+      top: events
+        .map((e) => ({
+          ...e,
+          ratio: e.duration / total
+        }))
+        .sort((a, b) => b.duration - a.duration)
+        .slice(0, top)
+    }
   }
 
-  return { step, measure, end, summary }
+  return { step, stepAsync, measure, end, summary }
 }

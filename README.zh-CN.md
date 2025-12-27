@@ -1,23 +1,47 @@
 # wukong-profiler
 
-🔥 **高性能 Node / CLI 性能分析器（Profiler）**，支持：
+<p align="center"> <a href="https://www.npmjs.com/package/wukong-profiler"> <img src="https://img.shields.io/npm/v/wukong-profiler.svg" alt="npm version"> </a> <a href="https://www.npmjs.com/package/wukong-profiler"> <img src="https://img.shields.io/npm/dm/wukong-profiler.svg" alt="downloads"> </a> <a href="https://github.com/tomatobybike/wukong-profiler/blob/master/LICENSE"> <img src="https://img.shields.io/github/license/tomatobybike/wukong-profiler.svg" alt="license"> </a> <a href="https://github.com/tomatobybike/wukong-profiler"> <img src="https://img.shields.io/github/stars/tomatobybike/wukong-profiler.svg?style=social" alt="GitHub stars"> </a> <a href="https://github.com/tomatobybike/wukong-profiler/issues"> <img src="https://img.shields.io/github/issues/tomatobybike/wukong-profiler.svg" alt="issues"> </a> </p>
 
-- ✅ **真正的嵌套步骤**（真实 Flame Graph 结构）
+🔥 **面向真实 async / await 场景的 Node.js / CLI 性能分析工具**
 
-- ✅ **Chrome Trace 导出**（`--trace trace.json`）
+`wukong-profiler` 是一个**轻量、准确、可用于 CI 的 wall-time profiler**，专注解决一个核心问题：
 
-- ✅ **HOT 步骤检测**（支持 CI 直接失败）
+> **在真实的异步 Node.js 程序中，时间到底花在哪里？**
 
-- ✅ **Profile Diff**（用于性能回退 / 回归检测）
+---
+
+## ✨ 核心特性
+
+- ✅ **原生支持 async / await**（真实 wall-time）
+
+- ✅ **层级嵌套步骤**（Flame Tree 结构，而非平铺日志）
+
+- ✅ **HOT / SLOW 自动标记**
+
+- ✅ **CPU / I/O 自动分类（heuristic）**
+
+- ✅ **自动给出性能解释建议**
+
+- ✅ **Chrome Trace 导出（Chrome / Perfetto）**
+
+- ✅ **性能回归 diff（CI 友好）**
+
+- ✅ \*\*零侵入、零魔法、可预测
+
+
 
 ## 中文 | [English](./README.md)
 
 ---
 
-## 安装
+## 📦 安装
 
 ```bash
 npm install wukong-profiler
+```
+
+```bash
+yarn add wukong-profiler
 ```
 
 或直接使用 `npx`：
@@ -28,16 +52,16 @@ npx wukong-profiler [options]
 
 ---
 
-## CLI 使用方式
+## 🧑‍💻 CLI 使用方式
 
 ```bash
 npx wukong-profiler --flame --trace trace.json --hot-threshold 0.8 --fail-on-hot
 ```
 
-### 运行 Profiler
+### 常见用法
 
 ```bash
-# 简单运行
+# 基础运行（终端 Flame 输出）
 npx wukong-profiler --flame --trace trace.json
 
 # 设置 HOT 阈值
@@ -47,9 +71,30 @@ npx wukong-profiler --hot-threshold 0.8 --fail-on-hot
 npx wukong-profiler --diff-base baseline.json --diff-threshold 0.2
 ```
 
+## 🧠 输出示例（重点）
+
+```text
+⏱ Total 28.52 s
+├─ getGitLogsFast        957.78 ms  ⚠ SLOW [IO]
+│   ↳ Likely I/O-bound (serial await or blocking I/O)
+├─ getOvertimeStats      26.39 s    🔥 HOT  [CPU]
+│   ↳ Likely CPU-bound (loops or heavy computation)
+│   ↳ Deep call stack — consider flattening logic
+```
+
+### 你能一眼看懂什么？
+
+- **谁是 HOT 路径**
+
+- **是 CPU 还是 I/O 问题**
+
+- **是不是 await 串行**
+
+- **是不是调用层级过深**
+
 ### 生成 HTML 报告
 
-````bash
+```bash
 # 从 profile.json 生成 HTML 报告
 npx wukong-profiler report ./profile.json
 
@@ -58,6 +103,8 @@ npx wukong-profiler report ./profile.json --open
 
 # 指定输出 HTML 文件
 npx wukong-profiler report ./profile.json -o my-report.html
+
+```
 
 ### CLI 参数说明
 
@@ -75,35 +122,69 @@ npx wukong-profiler report ./profile.json -o my-report.html
 
 ---
 
-## 编程方式（Programmatic Usage）
+---
 
-```js
+## 📘 编程方式使用（推荐）
+
+### 基础示例
+
+```bash
 import { createProfiler } from 'wukong-profiler'
 
 const profiler = createProfiler({
   enabled: true,
   flame: true,
-  traceFile: 'trace.json',
-  hotThreshold: 0.8,
-  failOnHot: true,
-  diffBaseFile: 'baseline.json',
-  diffThreshold: 0.2
+  hotThreshold: 0.8
 })
 
-profiler.step('加载数据', () => {
-  // 重任务
+profiler.step('load config', () => {
+  loadConfig()
 })
 
-profiler.step('处理数据', () => {
-  // 另一个重任务
+await profiler.stepAsync('fetch data', async () => {
+  await fetchRemoteData()
 })
 
-profiler.end('总耗时')
-````
+profiler.end('Total')
+```
+
+## ⚠️ Async / Await 性能分析（强烈推荐）
+
+### 为什么要用 `stepAsync`？
+
+在 Node.js 中：
+
+- `await` 会释放事件循环
+
+- 同步 profiler **无法正确统计 wall-time**
+
+- `wukong-profiler` 明确区分 sync / async
+
+### 正确姿势
+
+```js
+await profiler.stepAsync('getGitLogsFast', async () => {
+  await readGitLogs()
+})
+
+await profiler.stepAsync('getOvertimeStats', async () => {
+  await calculateStats()
+})
+```
+
+### 能得到什么？
+
+- ✔ 完整 async wall-time
+
+- ✔ 正确的嵌套结构
+
+- ✔ I/O vs CPU 自动分类
+
+- ✔ 可用于 CI / diff
 
 ---
 
-## API 文档
+### 🧩 API 说明
 
 ### `createProfiler(options)`
 
@@ -129,17 +210,63 @@ profiler.end('总耗时')
 
 测量一个 **同步步骤**。
 
+```bash
+profiler.step('parse config', () => {
+  parseConfig()
+})
+```
+
+---
+
+### `profiler.stepAsync(name, asyncFn)`
+
+测量**异步步骤（推荐）**，完整 wall-time。
+
+```js
+await profiler.stepAsync('fetch users', async () => {
+  await fetchUsers()
+})
+```
+
 ---
 
 ### `profiler.measure(name, fn)`
 
-测量一个 **同步或异步函数**。
+`step` 的别名（仅同步）。
+
+> ⚠️ 对 async 场景，**推荐使用 `stepAsync`**，语义更清晰。
 
 ---
 
 ### `profiler.end(label?)`
 
-结束 profiling，并输出最终结果。
+结束 profiling 并输出结果。
+
+```js
+profiler.end('Total')
+```
+
+---
+
+### `profiler.summary(options?)`
+
+获取结构化数据（适合 CI / 上报）。
+
+```js
+const summary = profiler.summary({ top: 3 })
+
+summary.top.forEach((step) => {
+  console.log(step.name, step.ratio)
+})
+```
+
+---
+
+### 📊 性能摘要（Top HOT 路径）
+
+```js
+const summary = profiler.summary({ top: 3 })
+```
 
 ---
 
@@ -153,7 +280,7 @@ node examples/async.mjs
 
 ---
 
-## Chrome Trace 使用方式
+## 🧪 Chrome Trace 使用方式
 
 ```bash
 node examples/basic.mjs
@@ -174,60 +301,6 @@ https://ui.perfetto.dev
 ```
 
 将生成的 trace 文件拖入即可查看。
-
----
-
-### 📊 性能摘要（Top HOT 路径）
-
-```js
-const summary = profiler.summary({ top: 3 })
-```
-
----
-
-## API 使用示例
-
-```js
-import { createProfiler } from 'wukong-profiler'
-
-const profiler = createProfiler({ enabled: true, flame: true })
-
-// 测量函数
-await profiler.measure('heavyTask', async () => {
-  await doHeavyWork()
-})
-
-// 嵌套步骤
-await profiler.measure('outer', async () => {
-  await profiler.measure('inner1', task1)
-  await profiler.measure('inner2', task2)
-})
-
-const { total, events, exitCode } = profiler.end('Total')
-console.log('总耗时:', total, 'ms')
-```
-
-### API 说明
-
-- `measure(name, fn)`：测量函数（支持 sync / async）
-
-- `step(name)`：手动记录一个步骤
-
-- `end(label)`：结束 profiling，可导出 Chrome Trace
-
----
-
-## 核心特性总结
-
-- 🔥 **支持嵌套步骤**，天然适合 Flame Graph
-
-- 🔥 **慢步骤 / HOT 步骤自动标记**
-
-- 🔥 **CI 友好**：性能问题可直接让构建失败
-
-- 🔥 **Chrome Trace 导出**，可视化精确到毫秒
-
-- 🔥 **Profile Diff**，用于性能回退检测
 
 ---
 
