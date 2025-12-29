@@ -42,6 +42,7 @@ lint-staged.config.js
 
 md-structure.config.json
 my-report.html
+wukong-report.html
 profile.json
 trace.json
 
