@@ -47,19 +47,35 @@ export const createProfiler = ({
       .map((l) => l.trim())
     if (!frames?.length) return null
 
-    // 尝试找到第一个不在 profiler 文件内的堆栈帧（即调用者）
-    const thisFile = typeof import.meta !== 'undefined' ? import.meta.url : null
+    // 尝试找到第一个不在 profiler 文件、node internal、或 node_modules 中的堆栈帧（即调用者）
+    const thisFileUrl =
+      typeof import.meta !== 'undefined' ? import.meta.url : null
+    const thisFileNorm = thisFileUrl
+      ? thisFileUrl.replace(/^file:\/\//, '')
+      : null
+
+    const isInternalFrame = (p) => {
+      if (!p) return true
+      const np = p.replace(/^file:\/\//, '')
+      if (np.startsWith('node:')) return true
+      if (np.includes('node:internal')) return true
+      if (np.includes('internal/')) return true
+      if (np.includes('node_modules')) return true
+      if (np.includes('profiler.mjs')) return true
+      return false
+    }
 
     let chosen = null
     for (const f of frames) {
-      const m = f.match(/\((.*):(\d+):(\d+)\)/) || f.match(/at (.*):(\d+):(\d+)/)
-
+      const m =
+        f.match(/\((.*):(\d+):(\d+)\)/) || f.match(/at (.*):(\d+):(\d+)/)
       if (m) {
-        const filePath = m[1]
-        // 跳过 profiler 自身或显式包含 profiler 名称的帧
-        if (thisFile && (filePath === thisFile || filePath.includes('profiler.mjs'))) {
-          // skip this frame
-        } else {
+        const rawPath = m[1]
+        const norm = rawPath.replace(/^file:\/\//, '')
+
+        // 跳过 Node 内部/包内/自身的帧
+        if (!isInternalFrame(norm)) {
+          // 首选真实文件系统路径（驱动器或绝对路径）
           chosen = f
           break
         }
