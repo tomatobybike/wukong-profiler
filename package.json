@@ -38,6 +38,7 @@
   "scripts": {
     "async-example": "node examples/async.mjs",
     "basic-example": "node examples/basic.mjs",
+    "example": "node examples/index.mjs",
     "check:npm:login": "node scripts/check-npm-login.mjs",
     "flame-example": "node examples/flame.mjs",
     "format": "prettier --write \"src/**/*.{js,mjs}\"",

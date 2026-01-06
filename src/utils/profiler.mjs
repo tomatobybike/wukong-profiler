@@ -47,7 +47,26 @@ export const createProfiler = ({
       .map((l) => l.trim())
     if (!frames?.length) return null
 
-    const top = frames[0]
+    // 尝试找到第一个不在 profiler 文件内的堆栈帧（即调用者）
+    const thisFile = typeof import.meta !== 'undefined' ? import.meta.url : null
+
+    let chosen = null
+    for (const f of frames) {
+      const m = f.match(/\((.*):(\d+):(\d+)\)/) || f.match(/at (.*):(\d+):(\d+)/)
+
+      if (m) {
+        const filePath = m[1]
+        // 跳过 profiler 自身或显式包含 profiler 名称的帧
+        if (thisFile && (filePath === thisFile || filePath.includes('profiler.mjs'))) {
+          // skip this frame
+        } else {
+          chosen = f
+          break
+        }
+      }
+    }
+
+    const top = chosen || frames[0]
     const match =
       top.match(/\((.*):(\d+):(\d+)\)/) || top.match(/at (.*):(\d+):(\d+)/)
 
