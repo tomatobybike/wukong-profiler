@@ -1,6 +1,6 @@
 {
   "name": "wukong-profiler",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "🔥 高性能 CLI/Node Profiler，支持 Flame Graph、Chrome Trace、HOT 步骤检测、性能回归分析",
   "keywords": [
     "profiler",
