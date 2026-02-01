@@ -1,6 +1,6 @@
 {
   "name": "wukong-profiler",
-  "version": "1.0.7",
+  "version": "1.0.10",
   "description": "🔥 高性能 CLI/Node Profiler，支持 Flame Graph、Chrome Trace、HOT 步骤检测、性能回归分析",
   "keywords": [
     "profiler",
@@ -38,6 +38,7 @@
   "scripts": {
     "async-example": "node examples/async.mjs",
     "basic-example": "node examples/basic.mjs",
+    "example": "node examples/index.mjs",
     "check:npm:login": "node scripts/check-npm-login.mjs",
     "flame-example": "node examples/flame.mjs",
     "format": "prettier --write \"src/**/*.{js,mjs}\"",
@@ -49,7 +50,7 @@
     "prettierall": "npx prettier --write 'src/**/*.{js,jsx}'",
     "push:tags": "git push origin main --follow-tags",
     "prerelease": "yarn lint",
-    "release": "yarn release:patch && zx scripts/prepublish-check.mjs&& npm publish && yarn push:tags",
+    "release": "yarn check:npm:login && zx scripts/prepublish-check.mjs && yarn release:patch && npm publish && yarn push:tags",
     "release:rollback": "git reset --hard HEAD~1 && git tag -d $(git tag --points-at HEAD~1)",
     "release:major": "yarn lint && standard-version --release-as major",
     "release:minor": "yarn lint && standard-version --release-as minor",

@@ -23,7 +23,7 @@ const summary = profiler.summary({ top: 5 })
 console.log('\n📊 Top HOT Paths:\n')
 summary.top.forEach((s, i) => {
   console.log(
-    `${i + 1}. ${s.path}`,
+    `${i + 1}. ${s.name}`,
     formatTime(s.duration),
     s.hot ? `🔥 HOT` : ''
   )
