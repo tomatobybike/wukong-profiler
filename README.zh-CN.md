@@ -28,8 +28,6 @@
 
 - ✅ \*\*零侵入、零魔法、可预测
 
-
-
 ## 中文 | [English](./README.md)
 
 ---
@@ -55,21 +53,17 @@ npx wukong-profiler [options]
 ## 🧑‍💻 CLI 使用方式
 
 ```bash
-npx wukong-profiler --flame --trace trace.json --hot-threshold 0.8 --fail-on-hot
+npx wukong-profiler report ./profile.json
 ```
 
-### 常见用法
+### CLI
 
 ```bash
-# 基础运行（终端 Flame 输出）
-npx wukong-profiler --flame --trace trace.json
-
-# 设置 HOT 阈值
-npx wukong-profiler --hot-threshold 0.8 --fail-on-hot
-
-# 使用基准 profile 检测性能回归
-npx wukong-profiler --diff-base baseline.json --diff-threshold 0.2
+# 从 profile.json 生成 HTML 报告
+npx wukong-profiler report ./profile.json
 ```
+
+要进行 profile，请使用编程 API（`createProfiler`）或查看 `examples/` 目录中的示例。
 
 ## 🧠 输出示例（重点）
 
@@ -106,19 +100,19 @@ npx wukong-profiler report ./profile.json -o my-report.html
 
 ```
 
-### CLI 参数说明
+用法：`npx wukong-profiler report <profile>`
 
-| 参数                   | 说明                                          |
-| ---------------------- | --------------------------------------------- |
-| `--profile`            | 保存 profile JSON 文件，用于后续分析          |
-| `--flame`              | 在控制台输出 Flame 风格的树状结果             |
-| `--trace <file>`       | 导出 Chrome Trace JSON 文件                   |
-| `--hot-threshold <n>`  | HOT 步骤占比阈值（默认：0.8）                 |
-| `--fail-on-hot`        | 如果存在 HOT 步骤，进程以非 0 退出（CI 失败） |
-| `--diff-base <file>`   | 与基准 profile 对比，检测性能回退             |
-| `--diff-threshold <n>` | 性能回退阈值（默认：0.2）                     |
-| `-v, --version`        | 显示版本号                                    |
-| `-h, --help`           | 显示帮助信息                                  |
+`<profile>` 是要生成报告的 `profile.json` 文件路径（必填）。
+
+### Report 子命令选项
+
+| 参数                  | 说明                                         |
+| --------------------- | -------------------------------------------- |
+| `-o, --output <file>` | 输出 HTML 文件（默认："wukong-report.html"） |
+| `--profile`           | 保存的 profile JSON 文件，用于分析           |
+| `--open`              | 生成后在默认浏览器中打开报告                 |
+
+> 注意：CLI 目前仅暴露 `report` 子命令。要运行 profiling，请使用编程 API（`createProfiler`）或查看 `examples/` 目录。查看 `report` 子命令帮助：`npx wukong-profiler report -h`。
 
 ---
 
@@ -134,8 +128,13 @@ import { createProfiler } from 'wukong-profiler'
 const profiler = createProfiler({
   enabled: true,
   flame: true,
+  profileFile: 'artifacts/profile.json', // 将 profile 输出到指定目录
+  traceFile: 'artifacts/trace.json',
   hotThreshold: 0.8
 })
+
+// 示例：在 CI 中将输出写入 artifacts/ 目录
+// const profiler = createProfiler({ enabled: true, profileFile: 'artifacts/profile.json', traceFile: 'artifacts/trace.json' })
 
 profiler.step('load config', () => {
   loadConfig()
@@ -192,17 +191,18 @@ await profiler.stepAsync('getOvertimeStats', async () => {
 
 #### Options 参数说明
 
-| 参数名          | 默认值      | 说明                             |
-| --------------- | ----------- | -------------------------------- |
-| `enabled`       | `false`     | 是否启用 profiler（输出 & JSON） |
-| `verbose`       | `false`     | 输出更详细的日志                 |
-| `flame`         | `false`     | 输出 Flame 风格的树结构          |
-| `slowThreshold` | `500`       | 慢步骤阈值（毫秒）               |
-| `hotThreshold`  | `0.8`       | HOT 步骤占比阈值                 |
-| `traceFile`     | `undefined` | Chrome Trace 输出文件            |
-| `failOnHot`     | `false`     | 检测到 HOT 步骤时 CI 失败        |
-| `diffBaseFile`  | `undefined` | 用于 diff 的基准 profile         |
-| `diffThreshold` | `0.2`       | 性能回退阈值                     |
+| 参数名          | 默认值         | 说明                             |
+| --------------- | -------------- | -------------------------------- |
+| `enabled`       | `false`        | 是否启用 profiler（输出 & JSON） |
+| `verbose`       | `false`        | 输出更详细的日志                 |
+| `flame`         | `false`        | 输出 Flame 风格的树结构          |
+| `slowThreshold` | `500`          | 慢步骤阈值（毫秒）               |
+| `hotThreshold`  | `0.8`          | HOT 步骤占比阈值                 |
+| `traceFile`     | `undefined`    | Chrome Trace 输出文件            |
+| `profileFile`   | `profile.json` | profile JSON 文件 存储路径       |
+| `failOnHot`     | `false`        | 检测到 HOT 步骤时 CI 失败        |
+| `diffBaseFile`  | `undefined`    | 用于 diff 的基准 profile         |
+| `diffThreshold` | `0.2`          | 性能回退阈值                     |
 
 ---
 

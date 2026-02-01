@@ -1,4 +1,5 @@
 import fs from 'fs'
+import path from 'path'
 
 export const exportChromeTrace = (events, file) => {
   const traceEvents = []
@@ -31,6 +32,12 @@ export const exportChromeTrace = (events, file) => {
   }
 
   walk(events)
+
+  // ensure directory exists
+  const dir = path.dirname(file)
+  if (dir && dir !== '.' && !fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true })
+  }
 
   fs.writeFileSync(
     file,

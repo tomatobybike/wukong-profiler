@@ -1,6 +1,7 @@
 import chalk from 'chalk'
 import fs from 'fs'
 
+import path from 'path'
 import { diffProfiles } from './diff.mjs'
 import { formatTime, makeBar } from './format.mjs'
 import { exportChromeTrace } from './trace.mjs'
@@ -25,6 +26,7 @@ export const createProfiler = ({
   slowThreshold = 500,
   hotThreshold = 0.8,
   traceFile,
+  profileFile = 'profile.json',
   failOnHot = false,
   diffBaseFile,
   diffThreshold = 0.2,
@@ -290,8 +292,13 @@ export const createProfiler = ({
       if (regressions.length) process.exitCode = 1
     }
 
-    if (enabled) {
-      fs.writeFileSync('profile.json', JSON.stringify(profile, null, 2))
+    if (enabled && profileFile) {
+      // ensure directory exists
+      const dir = path.dirname(profileFile)
+      if (dir && dir !== '.' && !fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true })
+      }
+      fs.writeFileSync(profileFile, JSON.stringify(profile, null, 2))
     }
 
     if (failOnHot && hasHot) {

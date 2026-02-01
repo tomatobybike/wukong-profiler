@@ -45,21 +45,17 @@ npx wukong-profiler [options]
 ## 🧑‍💻 CLI Usage
 
 ```bash
-npx wukong-profiler --flame --trace trace.json --hot-threshold 0.8 --fail-on-hot
+npx wukong-profiler report ./profile.json
 ```
 
-### Run profiler
+### CLI
 
 ```bash
-# Simple run
-npx wukong-profiler --flame --trace trace.json
-
-# Set HOT threshold
-npx wukong-profiler --hot-threshold 0.8 --fail-on-hot
-
-# With baseline profile for regression detection
-npx wukong-profiler --diff-base baseline.json --diff-threshold 0.2
+# Generate HTML report from a profile.json
+npx wukong-profiler report ./profile.json
 ```
+
+To profile code, use the programmatic API (`createProfiler`) or the examples in the `examples/` folder.
 
 ## 🧠 Output Example
 
@@ -87,19 +83,19 @@ npx wukong-profiler report ./profile.json --open
 npx wukong-profiler report ./profile.json -o my-report.html
 ```
 
-**Options:**
+Usage: `npx wukong-profiler report <profile>`
 
-| Option                 | Description                                             |
-| ---------------------- | ------------------------------------------------------- |
-| `--profile`            | Save profile JSON for analysis                          |
-| `--flame`              | Display flame-like console output                       |
-| `--trace <file>`       | Export Chrome Trace JSON file                           |
-| `--hot-threshold <n>`  | HOT step threshold (default: 0.8)                       |
-| `--fail-on-hot`        | Exit with non-zero code if a HOT step exceeds threshold |
-| `--diff-base <file>`   | Compare current profile with baseline for regression    |
-| `--diff-threshold <n>` | Diff threshold for regression (default: 0.2)            |
-| `-v, --version`        | Show version                                            |
-| `-h, --help`           | Show help                                               |
+`<profile>` is the path to a `profile.json` file (required).
+
+**Report subcommand options:**
+
+| Option                | Description                                             |
+| --------------------- | ------------------------------------------------------- |
+| `--profile`           | Saved profile JSON for analysis                         |
+| `-o, --output <file>` | Output HTML file (default: "wukong-report.html")        |
+| `--open`              | Open the report in the default browser after generation |
+
+> Note: This CLI only exposes the `report` subcommand. To profile code, use the JavaScript API (`createProfiler`) or the `examples/` folder. For report-specific help run `npx wukong-profiler report -h`.
 
 ---
 
@@ -112,11 +108,15 @@ const profiler = createProfiler({
   enabled: true,
   flame: true,
   traceFile: 'trace.json',
+  profileFile: 'artifacts/profile.json', // write profile to a custom directory
   hotThreshold: 0.8,
   failOnHot: true,
   diffBaseFile: 'baseline.json',
   diffThreshold: 0.2
 })
+
+// Example: write outputs to an `artifacts/` folder for CI
+// const profiler = createProfiler({ enabled: true, profileFile: 'artifacts/profile.json', traceFile: 'artifacts/trace.json' })
 
 profiler.step('load config', () => {
   // sync work
@@ -149,11 +149,11 @@ await profiler.stepAsync('getOvertimeStats', async () => {
 
 Why `stepAsync`?
 
--   ✔ Measures full async duration (not just sync part)
+- ✔ Measures full async duration (not just sync part)
 
--   ✔ Maintains correct nesting structure
+- ✔ Maintains correct nesting structure
 
--   ✔ Enables accurate I/O vs CPU classification
+- ✔ Enables accurate I/O vs CPU classification
 
 ---
 
@@ -166,14 +166,13 @@ Returns a profiler instance.
 #### Options
 
 | Name            | Default     | Description                 |
-| --------------- | ----------- | --------------------------- |
+| --------------- | ----------- | --------------------------- | --- | ------------- | -------------- | ------------------------------- | --- | ----------- | ------- | ------------------- |
 | `enabled`       | `false`     | Enable output & JSON export |
 | `verbose`       | `false`     | Verbose logging             |
 | `flame`         | `false`     | Flame-style tree output     |
 | `slowThreshold` | `500`       | Slow step threshold (ms)    |
 | `hotThreshold`  | `0.8`       | HOT step ratio              |
-| `traceFile`     | `undefined` | Chrome trace file           |
-| `failOnHot`     | `false`     | Fail CI on HOT step         |
+| `traceFile`     | `undefined` | Chrome trace file           |     | `profileFile` | `profile.json` | Path to write profile JSON file |     | `failOnHot` | `false` | Fail CI on HOT step |
 | `diffBaseFile`  | `undefined` | Base profile for diff       |
 | `diffThreshold` | `0.2`       | Regression threshold        |
 
